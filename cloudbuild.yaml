@@ -15,10 +15,6 @@ steps:
   args:
   - '-c'
   - |
-      if [ -d "environments/$BRANCH_NAME/" ]; then
-        cd environments/$BRANCH_NAME
-        terraform init -upgrade
-      else
         for dir in environments/*/
         do
           cd ${dir}
@@ -31,7 +27,6 @@ steps:
           terraform init -upgrade || exit 1
           cd ../../
         done
-      fi
 
 # [START tf-plan]
 - id: 'tf plan'
@@ -40,10 +35,7 @@ steps:
   args:
   - '-c'
   - |
-      if [ -d "environments/$BRANCH_NAME/" ]; then
-        cd environments/$BRANCH_NAME
-        terraform plan 
-      else
+      
         for dir in environments/*/
         do
           cd ${dir}
@@ -56,7 +48,6 @@ steps:
           terraform plan || exit 1
           cd ../../
         done
-      fi
 # [END tf-plan]
 # [START tf-apply]
 - id: 'tf apply'
@@ -65,15 +56,18 @@ steps:
   args:
   - '-c'
   - |
-      if [ -d "environments/$BRANCH_NAME/" ]; then
-        cd environments/$BRANCH_NAME
-        terraform apply -auto-approve
-      else
-        echo "***************************** SKIPPING APPLY *****************************"
-        echo "Branch '$BRANCH_NAME' does not represent an official environment."
-        echo "*******************************************************************************"
-      fi
+        for dir in environments/*/
+        do
+          cd ${dir}
+          env=${dir%*/}
+          env=${env#*/}
+          echo ""
+          echo "*************** TERRAFORM APPLY ***************"
+          echo "******** At environment: ${env} ********"
+          echo "*************************************************"
 
+          terraform apply -auto-approve
+        done
 
 options:
   logging: 'CLOUD_LOGGING_ONLY'
